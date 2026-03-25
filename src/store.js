@@ -18,6 +18,7 @@ const SHAPE_PRESETS = {
   Giriş: { width: 150, height: 100, color: '#2ecc71' },
   DJ: { width: 150, height: 100, color: '#9b59b6' },
   Çiçek: { width: 150, height: 100, color: '#e74c3c' },
+  Yazı: { width: 170, height: 70, color: '#f1c40f' },
   Havuz: { width: 170, height: 110, color: '#1abc9c' },
   Diğer: { width: 150, height: 100, color: '#6c757d' },
 };
@@ -100,7 +101,7 @@ const useStore = create(
       selectTable: (id) => set({ selectedTableId: id, selectedShapeId: null }),
 
       // Shape Actions
-      addShape: (shapeType, x, y) =>
+      addShape: (shapeType, x, y, options = {}) =>
         set((state) => {
           const preset = getShapePreset(shapeType);
           return {
@@ -109,12 +110,12 @@ const useStore = create(
               {
                 id: uuidv4(),
                 type: shapeType,
-                label: shapeType,
+                label: options.label || shapeType,
                 x: snapToGrid(x),
                 y: snapToGrid(y),
-                width: preset.width,
-                height: preset.height,
-                color: preset.color,
+                width: options.width || preset.width,
+                height: options.height || preset.height,
+                color: options.color || preset.color,
               },
             ],
           };

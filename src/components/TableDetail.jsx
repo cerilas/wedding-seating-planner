@@ -102,7 +102,7 @@ export default function TableDetail() {
                     <span className="stat-value">{table.number}</span>
                 </div>
                 <div className="stat">
-                    <span className="stat-label">Davetli Grup</span>
+                    <span className="stat-label">Davetli</span>
                     <span className="stat-value">{tableGuests.length}</span>
                 </div>
                 <div className="stat">

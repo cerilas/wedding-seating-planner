@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import useStore from '../store';
+import useUiStore from '../uiStore';
 import TableNode from './TableNode';
 import ShapeNode from './ShapeNode';
-import { ZoomIn, ZoomOut, Maximize2, Plus, Shapes } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Plus, Shapes, Camera } from 'lucide-react';
 
 const SHAPE_OPTIONS = [
     { type: 'Sahne', icon: '🎭', desc: 'Sahne / Kürsü' },
@@ -14,20 +15,33 @@ const SHAPE_OPTIONS = [
     { type: 'DJ', icon: '🎧', desc: 'DJ Standı' },
     { type: 'Çiçek', icon: '💐', desc: 'Çiçek / Dekorasyon' },
     { type: 'Havuz', icon: '🏊', desc: 'Havuz' },
+    { type: 'Yazı', icon: '✍️', desc: 'Yazı Kutusu' },
     { type: 'Diğer', icon: '📦', desc: 'Diğer' },
 ];
 
 export default function FloorPlan() {
     const { tables, shapes, addTable, addShape, moveTable, moveShape, selectTable, selectShape, selectedTableId, selectedShapeId } = useStore();
+    const { pushToast } = useUiStore();
     const containerRef = useRef(null);
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
+
+    const handleZoomIn = () => {
+        setZoom((z) => Math.min(Math.max(0.3, z + 0.2), 3));
+    };
+
+    const handleZoomOut = () => {
+        setZoom((z) => Math.max(0.3, z - 0.2));
+    };
+
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
     const [dragOffset, setDragOffset] = useState(null);
     const [draggingTableId, setDraggingTableId] = useState(null);
     const [draggingShapeId, setDraggingShapeId] = useState(null);
     const [showShapeMenu, setShowShapeMenu] = useState(false);
+    const [showTextModal, setShowTextModal] = useState(false);
+    const [textInput, setTextInput] = useState('');
     const shapeMenuRef = useRef(null);
 
     // Close shape menu on outside click
@@ -160,8 +174,61 @@ export default function FloorPlan() {
         const centerX = (rect.width / 2 - pan.x) / zoom;
         const centerY = (rect.height / 2 - pan.y) / zoom;
         const offset = shapes.length * 20;
+
+        if (shapeType === 'Yazı') {
+            setTextInput('');
+            setShowTextModal(true);
+            setShowShapeMenu(false);
+            return;
+        }
+
         addShape(shapeType, centerX + offset, centerY + offset);
         setShowShapeMenu(false);
+    };
+
+    const handleAddTextConfirm = () => {
+        const text = textInput.trim();
+        if (!text) {
+            pushToast({ message: 'Lütfen metin girin.', type: 'error' });
+            return;
+        }
+
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const centerX = (rect.width / 2 - pan.x) / zoom;
+        const centerY = (rect.height / 2 - pan.y) / zoom;
+        const offset = shapes.length * 20;
+
+        addShape('Yazı', centerX + offset, centerY + offset, { label: text });
+        pushToast({ message: 'Yazı kutusu eklendi.', type: 'success' });
+        setShowTextModal(false);
+        setTextInput('');
+    };
+
+
+    const handleExportAsPng = async () => {
+        if (!containerRef.current) {
+            pushToast({ message: 'Kayıt yapılacak alan bulunamadı.', type: 'error' });
+            return;
+        }
+
+        if (!window.html2canvas) {
+            pushToast({ message: 'html2canvas yüklenmedi. Lütfen sayfayı yenileyin.', type: 'error' });
+            return;
+        }
+
+        try {
+            const canvas = await window.html2canvas(containerRef.current, { backgroundColor: '#0f0f1a', scale: 2 });
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `dugun-kroki-${Date.now()}.png`;
+            link.click();
+            pushToast({ message: 'PNG olarak indirildi.', type: 'success' });
+        } catch (error) {
+            console.error(error);
+            pushToast({ message: 'Görüntü oluşturulamadı.', type: 'error' });
+        }
     };
 
     return (
@@ -171,6 +238,9 @@ export default function FloorPlan() {
                 <div className="toolbar-buttons">
                     <button className="btn btn-primary btn-add-table" onClick={handleAddTableButton}>
                         <Plus size={16} /> Masa Ekle
+                    </button>
+                    <button className="btn btn-secondary btn-add-table" onClick={handleExportAsPng}>
+                        <Camera size={16} /> Görüntü indir
                     </button>
                     <div className="shape-menu-wrapper" ref={shapeMenuRef}>
                         <button
@@ -200,11 +270,11 @@ export default function FloorPlan() {
                 </div>
                 <div className="floor-hint">çift tıkla → masa • Alt+Sürükle → kaydır • Scroll → zoom</div>
                 <div className="zoom-controls">
-                    <button className="btn-icon" onClick={() => setZoom((z) => Math.min(z + 0.2, 3))} title="Yakınlaştır">
+                    <button className="btn-icon" onClick={handleZoomIn} title="Yakınlaştır ve merkezle">
                         <ZoomIn size={18} />
                     </button>
                     <span className="zoom-level">{Math.round(zoom * 100)}%</span>
-                    <button className="btn-icon" onClick={() => setZoom((z) => Math.max(z - 0.2, 0.3))} title="Uzaklaştır">
+                    <button className="btn-icon" onClick={handleZoomOut} title="Uzaklaştır">
                         <ZoomOut size={18} />
                     </button>
                     <button className="btn-icon" onClick={resetView} title="Sıfırla">
@@ -264,6 +334,28 @@ export default function FloorPlan() {
                     )}
                 </div>
             </div>
+
+            {showTextModal && (
+                <div className="modal-overlay">
+                    <div className="text-input-modal">
+                        <h3>Yazı Ekle</h3>
+                        <textarea
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            placeholder="Buraya yazınızı girin..."
+                            rows={4}
+                        />
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setShowTextModal(false)}>
+                                İptal
+                            </button>
+                            <button className="btn btn-primary" onClick={handleAddTextConfirm}>
+                                Kaydet
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -12,6 +12,7 @@ const SHAPE_ICONS = {
   'Çiçek': '💐',
   'Havuz': '🏊',
   'Pist': '💃',
+  'Yazı': '✍️',
   'Diğer': '📦',
 };
 
@@ -160,8 +161,14 @@ export default function ShapeNode({ shape, isSelected, onDragStart, zoom }) {
             ✕
           </button>
         )}
-        <span className="shape-icon">{icon}</span>
-        <span className="shape-label-text">{shape.label}</span>
+        {shape.type === 'Yazı' ? (
+          <div className="shape-text-content">{shape.label}</div>
+        ) : (
+          <>
+            <span className="shape-icon">{icon}</span>
+            <span className="shape-label-text">{shape.label}</span>
+          </>
+        )}
       </div>
 
       {/* Resize handles - only visible when selected */}
