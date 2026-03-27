@@ -1,5 +1,7 @@
 # Düğün Oturma Düzeni ve Salon Kroki Uygulaması | Wedding Seating Chart & Floor Plan Builder
 
+Canlı demo: [https://bilgearif.cerilas.com](https://bilgearif.cerilas.com)
+
 Modern, hızlı ve kullanımı kolay bir düğün oturma düzeni oluşturma uygulaması. Bu proje; **düğün masa planı hazırlama**, **salon krokisi oluşturma**, **misafir yerleşimi yönetimi**, **Excel ile davetli içe/dışa aktarma** ve **drag & drop masa yerleşimi** süreçlerini tek ekranda yönetmek için geliştirildi.
 
 > Anahtar kelimeler: düğün oturma düzeni, wedding seating chart, masa planı, salon kroki uygulaması, organizasyon planlama, düğün masa yerleşimi, wedding floor plan, guest seating planner
