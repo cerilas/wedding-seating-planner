@@ -1,6 +1,7 @@
 import { useCallback, useState, useRef } from 'react';
 import useStore from '../store';
 import useUiStore from '../uiStore';
+import { useLocale } from '../i18n';
 
 const SHAPE_ICONS = {
   'Sahne': '🎭',
@@ -19,6 +20,7 @@ const SHAPE_ICONS = {
 export default function ShapeNode({ shape, isSelected, onDragStart, zoom }) {
   const { selectShape, removeShape, updateShape } = useStore();
   const { openConfirm, pushToast } = useUiStore();
+  const { t } = useLocale();
   const [resizing, setResizing] = useState(null);
   const startRef = useRef(null);
 
@@ -43,14 +45,14 @@ export default function ShapeNode({ shape, isSelected, onDragStart, zoom }) {
   const handleContextMenu = (e) => {
     e.preventDefault();
     openConfirm({
-      title: 'Şekil silinsin mi?',
-      message: `${shape.label} kaldırılacak.`,
-      confirmText: 'Evet, sil',
-      cancelText: 'Vazgeç',
+      title: t('confirmDeleteShapeTitle'),
+      message: t('confirmDeleteShapeMsg', { shape: shape.label }),
+      confirmText: t('confirmYesDelete'),
+      cancelText: t('cancel'),
       variant: 'danger',
       onConfirm: () => {
         removeShape(shape.id);
-        pushToast({ message: `${shape.label} silindi.`, type: 'info' });
+        pushToast({ message: t('shapeDeleted', { shape: shape.label }), type: 'info' });
       },
     });
   };
@@ -145,18 +147,18 @@ export default function ShapeNode({ shape, isSelected, onDragStart, zoom }) {
             onClick={(e) => {
               e.stopPropagation();
               openConfirm({
-                title: 'Şekil silinsin mi?',
-                message: `${shape.label} kaldırılacak.`,
-                confirmText: 'Evet, sil',
-                cancelText: 'Vazgeç',
+                title: t('confirmDeleteShapeTitle'),
+                message: t('confirmDeleteShapeMsg', { shape: shape.label }),
+                confirmText: t('confirmYesDelete'),
+                cancelText: t('cancel'),
                 variant: 'danger',
                 onConfirm: () => {
                   removeShape(shape.id);
-                  pushToast({ message: `${shape.label} silindi.`, type: 'info' });
+                  pushToast({ message: t('shapeDeleted', { shape: shape.label }), type: 'info' });
                 },
               });
             }}
-            title="Şekli Sil"
+            title={t('deleteShape')}
           >
             ✕
           </button>

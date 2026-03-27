@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import useStore from '../store';
 import useUiStore from '../uiStore';
+import { useLocale } from '../i18n';
 import { Upload, Download, Plus, Search, X, Tag, Users, FileSpreadsheet } from 'lucide-react';
 import GuestForm from './GuestForm';
 
@@ -18,6 +19,7 @@ export default function GuestPanel() {
         downloadTemplate,
     } = useStore();
     const { openConfirm, pushToast } = useUiStore();
+    const { t } = useLocale();
 
     const [showForm, setShowForm] = useState(false);
     const [editingGuest, setEditingGuest] = useState(null);
@@ -56,14 +58,14 @@ export default function GuestPanel() {
 
     const handleDeleteGuest = (guest) => {
         openConfirm({
-            title: 'Davetli silinsin mi?',
-            message: `${guest.name} kaydı kalıcı olarak silinecek.`,
-            confirmText: 'Evet, sil',
-            cancelText: 'Vazgeç',
+            title: t('deleteGuestConfirmTitle'),
+            message: t('deleteGuestConfirmMessage', { name: guest.name }),
+            confirmText: t('confirmYesDelete'),
+            cancelText: t('cancel'),
             variant: 'danger',
             onConfirm: () => {
                 deleteGuest(guest.id);
-                pushToast({ message: `${guest.name} silindi.`, type: 'info' });
+                pushToast({ message: t('guestDeleted', { name: guest.name }), type: 'info' });
             },
         });
     };
@@ -86,21 +88,21 @@ export default function GuestPanel() {
     return (
         <div className="guest-panel">
             <div className="panel-header">
-                <h2><Users size={20} /> Davetliler</h2>
+                <h2><Users size={20} /> {t('guestPanelTitle')}</h2>
                 <span className="guest-count-badge">
-                    {assignedCount}/{totalGuestCount} kişi yerleştirildi
+                    {t('seatedInfo', { assigned: assignedCount, total: totalGuestCount })}
                 </span>
             </div>
 
             <div className="panel-actions">
                 <button className="btn btn-primary" onClick={() => { setEditingGuest(null); setShowForm(true); }}>
-                    <Plus size={16} /> Ekle
+                    <Plus size={16} /> {t('addGuest')}
                 </button>
                 <button className="btn btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                    <Upload size={16} /> İçe Aktar
+                    <Upload size={16} /> {t('importGuest')}
                 </button>
                 <button className="btn btn-secondary" onClick={exportToExcel} disabled={guests.length === 0}>
-                    <Download size={16} /> Dışa Aktar
+                    <Download size={16} /> {t('exportGuest')}
                 </button>
                 <input
                     ref={fileInputRef}
@@ -112,18 +114,33 @@ export default function GuestPanel() {
             </div>
 
             <div className="template-hint">
-                <p>Excel formatını bilmiyor musunuz?</p>
-                <button className="btn btn-template" onClick={downloadTemplate}>
-                    <FileSpreadsheet size={14} /> Örnek Şablon İndir
+                <p>{t('excelHint')}</p>
+                <button
+                    className="btn btn-template"
+                    onClick={() =>
+                        downloadTemplate({
+                            name: t('nameLabel'),
+                            guestCount: t('guestCount'),
+                            phone: t('phone'),
+                            tableNo: t('tableNo'),
+                            tableX: t('tableX'),
+                            tableY: t('tableY'),
+                            tableShape: t('tableShape'),
+                            note: t('note'),
+                            tag: t('tag'),
+                        })
+                    }
+                >
+                    <FileSpreadsheet size={14} /> {t('templateDownload')}
                 </button>
-                <p className="template-columns">Sütunlar: <strong>İsim</strong>, <strong>Davetli Sayısı</strong>, <strong>Telefon</strong>, <strong>Not</strong>, <strong>Etiket</strong></p>
+                <p className="template-columns">{t('templateColumns')}</p>
             </div>
 
             <div className="search-bar">
                 <Search size={16} />
                 <input
                     type="text"
-                    placeholder="Ara..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -141,7 +158,7 @@ export default function GuestPanel() {
                         className={`tag-chip ${!filterTag ? 'active' : ''}`}
                         onClick={() => setFilterTag('')}
                     >
-                        Tümü
+                        {t('all')}
                     </button>
                     {allTags.map((tag) => (
                         <button
@@ -158,7 +175,7 @@ export default function GuestPanel() {
             <div className="guest-list-container">
                 {unassignedGuests.length > 0 && (
                     <>
-                        <h3 className="list-section-title">Yerleştirilmemiş ({unassignedGuests.length})</h3>
+                        <h3 className="list-section-title">{t('unassignedGuests', { count: unassignedGuests.length })}</h3>
                         <div className="guest-list">
                             {unassignedGuests.map((guest) => (
                                 <div
@@ -170,13 +187,13 @@ export default function GuestPanel() {
                                 >
                                     <div className="guest-card-main">
                                         <span className="guest-name">{guest.name}</span>
-                                        <span className="guest-count">{guest.guestCount} kişi</span>
+                                        <span className="guest-count">{t('guestCountLabel', { count: guest.guestCount })}</span>
                                     </div>
                                     {guest.tag && <span className="guest-tag">{guest.tag}</span>}
                                     {guest.phone && <span className="guest-phone">{guest.phone}</span>}
                                     <div className="guest-card-actions">
-                                        <button onClick={() => { setEditingGuest(guest); setShowForm(true); }}>Düzenle</button>
-                                        <button className="danger" onClick={() => handleDeleteGuest(guest)}>Sil</button>
+                                        <button onClick={() => { setEditingGuest(guest); setShowForm(true); }}>{t('editProfile')}</button>
+                                        <button className="danger" onClick={() => handleDeleteGuest(guest)}>{t('deleteGuest')}</button>
                                     </div>
                                 </div>
                             ))}
@@ -186,7 +203,7 @@ export default function GuestPanel() {
 
                 {assignedGuests.length > 0 && (
                     <>
-                        <h3 className="list-section-title">Yerleştirilmiş ({assignedGuests.length})</h3>
+                        <h3 className="list-section-title">{t('assignedGuests', { count: assignedGuests.length })}</h3>
                         <div className="guest-list">
                             {assignedGuests.map((guest) => (
                                 <div
@@ -198,13 +215,13 @@ export default function GuestPanel() {
                                 >
                                     <div className="guest-card-main">
                                         <span className="guest-name">{guest.name}</span>
-                                        <span className="guest-count">{guest.guestCount} kişi</span>
+                                        <span className="guest-count">{t('guestCountLabel', { count: guest.guestCount })}</span>
                                     </div>
                                     <span className="guest-table-badge">{getTableLabel(guest.tableId)}</span>
                                     {guest.tag && <span className="guest-tag">{guest.tag}</span>}
                                     <div className="guest-card-actions">
-                                        <button onClick={() => { setEditingGuest(guest); setShowForm(true); }}>Düzenle</button>
-                                        <button className="danger" onClick={() => handleDeleteGuest(guest)}>Sil</button>
+                                        <button onClick={() => { setEditingGuest(guest); setShowForm(true); }}>{t('editProfile')}</button>
+                                        <button className="danger" onClick={() => handleDeleteGuest(guest)}>{t('deleteGuest')}</button>
                                     </div>
                                 </div>
                             ))}
@@ -214,8 +231,8 @@ export default function GuestPanel() {
 
                 {filteredGuests.length === 0 && (
                     <div className="empty-state">
-                        <p>Henüz davetli eklenmedi.</p>
-                        <p>Yukarıdaki <strong>Ekle</strong> veya <strong>İçe Aktar</strong> butonlarını kullanın.</p>
+                        <p>{t('noGuest')}</p>
+                        <p>{t('noGuestHint')}</p>
                     </div>
                 )}
             </div>

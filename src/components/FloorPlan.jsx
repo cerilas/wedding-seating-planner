@@ -1,27 +1,29 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import useStore from '../store';
 import useUiStore from '../uiStore';
+import { useLocale } from '../i18n';
 import TableNode from './TableNode';
 import ShapeNode from './ShapeNode';
 import { ZoomIn, ZoomOut, Maximize2, Plus, Shapes, Camera } from 'lucide-react';
 
 const SHAPE_OPTIONS = [
-    { type: 'Sahne', icon: '🎭', desc: 'Sahne / Kürsü' },
-    { type: 'Pist', icon: '💃', desc: 'Dans Pisti' },
-    { type: 'Duvar', icon: '🧱', desc: 'Duvar / Bölme' },
-    { type: 'Mutfak', icon: '🍳', desc: 'Mutfak Alanı' },
-    { type: 'Bar', icon: '🍸', desc: 'Bar' },
-    { type: 'Giriş', icon: '🚪', desc: 'Giriş / Çıkış' },
-    { type: 'DJ', icon: '🎧', desc: 'DJ Standı' },
-    { type: 'Çiçek', icon: '💐', desc: 'Çiçek / Dekorasyon' },
-    { type: 'Havuz', icon: '🏊', desc: 'Havuz' },
-    { type: 'Yazı', icon: '✍️', desc: 'Yazı Kutusu' },
-    { type: 'Diğer', icon: '📦', desc: 'Diğer' },
+    { type: 'Sahne', icon: '🎭' },
+    { type: 'Pist', icon: '💃' },
+    { type: 'Duvar', icon: '🧱' },
+    { type: 'Mutfak', icon: '🍳' },
+    { type: 'Bar', icon: '🍸' },
+    { type: 'Giriş', icon: '🚪' },
+    { type: 'DJ', icon: '🎧' },
+    { type: 'Çiçek', icon: '💐' },
+    { type: 'Havuz', icon: '🏊' },
+    { type: 'Yazı', icon: '✍️' },
+    { type: 'Diğer', icon: '📦' },
 ];
 
 export default function FloorPlan() {
     const { tables, shapes, addTable, addShape, moveTable, moveShape, selectTable, selectShape, selectedTableId, selectedShapeId } = useStore();
     const { pushToast } = useUiStore();
+    const { t } = useLocale();
     const containerRef = useRef(null);
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -64,9 +66,9 @@ export default function FloorPlan() {
             const rect = containerRef.current.getBoundingClientRect();
             const x = (e.clientX - rect.left - pan.x) / zoom;
             const y = (e.clientY - rect.top - pan.y) / zoom;
-            addTable(x, y);
+            addTable(x, y, t('tableLabel', { number: tables.length + 1 }));
         },
-        [addTable, pan, zoom]
+        [addTable, pan, zoom, t, tables.length]
     );
 
     // Pan with middle mouse or when holding alt
@@ -165,7 +167,7 @@ export default function FloorPlan() {
         const centerX = (rect.width / 2 - pan.x) / zoom;
         const centerY = (rect.height / 2 - pan.y) / zoom;
         const offset = tables.length * 30;
-        addTable(centerX + offset, centerY + offset);
+        addTable(centerX + offset, centerY + offset, t('tableLabel', { number: tables.length + 1 }));
     };
 
     const handleAddShape = (shapeType) => {
@@ -189,7 +191,7 @@ export default function FloorPlan() {
     const handleAddTextConfirm = () => {
         const text = textInput.trim();
         if (!text) {
-            pushToast({ message: 'Lütfen metin girin.', type: 'error' });
+            pushToast({ message: t('enterText'), type: 'error' });
             return;
         }
 
@@ -200,7 +202,7 @@ export default function FloorPlan() {
         const offset = shapes.length * 20;
 
         addShape('Yazı', centerX + offset, centerY + offset, { label: text });
-        pushToast({ message: 'Yazı kutusu eklendi.', type: 'success' });
+        pushToast({ message: t('shapeTextAdded'), type: 'success' });
         setShowTextModal(false);
         setTextInput('');
     };
@@ -208,12 +210,12 @@ export default function FloorPlan() {
 
     const handleExportAsPng = async () => {
         if (!containerRef.current) {
-            pushToast({ message: 'Kayıt yapılacak alan bulunamadı.', type: 'error' });
+            pushToast({ message: t('exportTargetMissing'), type: 'error' });
             return;
         }
 
         if (!window.html2canvas) {
-            pushToast({ message: 'html2canvas yüklenmedi. Lütfen sayfayı yenileyin.', type: 'error' });
+            pushToast({ message: t('html2canvasMissing'), type: 'error' });
             return;
         }
 
@@ -227,57 +229,60 @@ export default function FloorPlan() {
             pushToast({ message: 'PNG olarak indirildi.', type: 'success' });
         } catch (error) {
             console.error(error);
-            pushToast({ message: 'Görüntü oluşturulamadı.', type: 'error' });
+            pushToast({ message: t('imageExportFailed'), type: 'error' });
         }
     };
 
     return (
         <div className="floor-plan-container">
             <div className="floor-toolbar">
-                <span className="floor-title">🏛️ Salon Krokisi</span>
+                <span className="floor-title">{t('floorTitle')}</span>
                 <div className="toolbar-buttons">
                     <button className="btn btn-primary btn-add-table" onClick={handleAddTableButton}>
-                        <Plus size={16} /> Masa Ekle
+                        <Plus size={16} /> {t('addTable')}
                     </button>
                     <button className="btn btn-secondary btn-add-table" onClick={handleExportAsPng}>
-                        <Camera size={16} /> Görüntü indir
+                        <Camera size={16} /> {t('downloadImage')}
                     </button>
                     <div className="shape-menu-wrapper" ref={shapeMenuRef}>
                         <button
                             className={`btn btn-secondary btn-add-shape ${showShapeMenu ? 'active' : ''}`}
                             onClick={() => setShowShapeMenu(!showShapeMenu)}
                         >
-                            <Shapes size={16} /> Şekil Ekle
+                            <Shapes size={16} /> {t('addShape')}
                         </button>
                         {showShapeMenu && (
                             <div className="shape-dropdown">
-                                <div className="shape-dropdown-title">Eklenecek öğe seçin</div>
+                                <div className="shape-dropdown-title">{t('shapeOptionTitle')}</div>
                                 <div className="shape-dropdown-grid">
-                                    {SHAPE_OPTIONS.map((opt) => (
-                                        <button
-                                            key={opt.type}
-                                            className="shape-dropdown-item"
-                                            onClick={() => handleAddShape(opt.type)}
-                                        >
-                                            <span className="shape-dropdown-icon">{opt.icon}</span>
-                                            <span className="shape-dropdown-label">{opt.desc}</span>
-                                        </button>
-                                    ))}
+                                    {SHAPE_OPTIONS.map((opt) => {
+                                        const label = t('shapeItem')[opt.type] || opt.type;
+                                        return (
+                                            <button
+                                                key={opt.type}
+                                                className="shape-dropdown-item"
+                                                onClick={() => handleAddShape(opt.type)}
+                                            >
+                                                <span className="shape-dropdown-icon">{opt.icon}</span>
+                                                <span className="shape-dropdown-label">{label}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
-                <div className="floor-hint">çift tıkla → masa • Alt+Sürükle → kaydır • Scroll → zoom</div>
+                <div className="floor-hint">{t('zoomHint')}</div>
                 <div className="zoom-controls">
-                    <button className="btn-icon" onClick={handleZoomIn} title="Yakınlaştır ve merkezle">
+                    <button className="btn-icon" onClick={handleZoomIn} title={t('zoomIn')}>
                         <ZoomIn size={18} />
                     </button>
                     <span className="zoom-level">{Math.round(zoom * 100)}%</span>
-                    <button className="btn-icon" onClick={handleZoomOut} title="Uzaklaştır">
+                    <button className="btn-icon" onClick={handleZoomOut} title={t('zoomOut')}>
                         <ZoomOut size={18} />
                     </button>
-                    <button className="btn-icon" onClick={resetView} title="Sıfırla">
+                    <button className="btn-icon" onClick={resetView} title={t('reset')}>
                         <Maximize2 size={18} />
                     </button>
                 </div>
@@ -329,7 +334,7 @@ export default function FloorPlan() {
                     {tables.length === 0 && shapes.length === 0 && (
                         <div className="floor-empty-hint">
                             <p>🪑</p>
-                            <p>Boş alana çift tıklayarak masa ekleyin</p>
+                            <p>{t('floorEmptyHint')}</p>
                         </div>
                     )}
                 </div>
@@ -338,19 +343,19 @@ export default function FloorPlan() {
             {showTextModal && (
                 <div className="modal-overlay">
                     <div className="text-input-modal">
-                        <h3>Yazı Ekle</h3>
+                        <h3>{t('addText')}</h3>
                         <textarea
                             value={textInput}
                             onChange={(e) => setTextInput(e.target.value)}
-                            placeholder="Buraya yazınızı girin..."
+                            placeholder={t('textPlaceholder')}
                             rows={4}
                         />
                         <div className="modal-actions">
                             <button className="btn btn-secondary" onClick={() => setShowTextModal(false)}>
-                                İptal
+                                {t('cancel')}
                             </button>
                             <button className="btn btn-primary" onClick={handleAddTextConfirm}>
-                                Kaydet
+                                {t('save')}
                             </button>
                         </div>
                     </div>

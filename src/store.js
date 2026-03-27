@@ -58,7 +58,7 @@ const useStore = create(
         })),
 
       // Table Actions
-      addTable: (x, y) =>
+      addTable: (x, y, label) =>
         set((state) => {
           const tableNumber = state.tables.length + 1;
           return {
@@ -66,12 +66,12 @@ const useStore = create(
               ...state.tables,
               {
                 id: uuidv4(),
-                label: `Masa ${tableNumber}`,
+                label: label || `Table ${tableNumber}`,
                 number: tableNumber,
-                x: snapToGrid(x),
+                autoLabel: true,                rotation: 0,                x: snapToGrid(x),
                 y: snapToGrid(y),
                 shape: 'circle', // varsayılan şekil
-              },
+              }
             ],
           };
         }),
@@ -286,11 +286,23 @@ const useStore = create(
       },
 
       // Download Template
-      downloadTemplate: () => {
+      downloadTemplate: (labels = null) => {
+        const defaultLabels = {
+          name: 'İsim',
+          guestCount: 'Davetli Sayısı',
+          phone: 'Telefon',
+          tableNo: 'Masa No',
+          tableX: 'Masa X',
+          tableY: 'Masa Y',
+          tableShape: 'Masa Şekli',
+          note: 'Not',
+          tag: 'Etiket',
+        };
+        const cols = labels || defaultLabels;
         const sampleData = [
-          { 'İsim': 'Ahmet Yılmaz', 'Davetli Sayısı': 3, 'Telefon': '0555 123 4567', 'Masa No': 1, 'Masa X': 100, 'Masa Y': 100, 'Masa Şekli': 'circle', 'Not': 'Vejetaryen', 'Etiket': 'Damat Tarafı' },
-          { 'İsim': 'Ayşe Kaya', 'Davetli Sayısı': 2, 'Telefon': '0532 987 6543', 'Masa No': 2, 'Masa X': 250, 'Masa Y': 100, 'Masa Şekli': 'square', 'Not': '', 'Etiket': 'Gelin Tarafı' },
-          { 'İsim': 'Mehmet Demir', 'Davetli Sayısı': 4, 'Telefon': '0544 555 1234', 'Masa No': 1, 'Masa X': '', 'Masa Y': '', 'Masa Şekli': '', 'Not': 'Çocuklu', 'Etiket': 'İş Arkadaşları' },
+          { [cols.name]: 'Ahmet Yılmaz', [cols.guestCount]: 3, [cols.phone]: '0555 123 4567', [cols.tableNo]: 1, [cols.tableX]: 100, [cols.tableY]: 100, [cols.tableShape]: 'circle', [cols.note]: 'Vejetaryen', [cols.tag]: 'Damat Tarafı' },
+          { [cols.name]: 'Ayşe Kaya', [cols.guestCount]: 2, [cols.phone]: '0532 987 6543', [cols.tableNo]: 2, [cols.tableX]: 250, [cols.tableY]: 100, [cols.tableShape]: 'square', [cols.note]: '', [cols.tag]: 'Gelin Tarafı' },
+          { [cols.name]: 'Mehmet Demir', [cols.guestCount]: 4, [cols.phone]: '0544 555 1234', [cols.tableNo]: 1, [cols.tableX]: '', [cols.tableY]: '', [cols.tableShape]: '', [cols.note]: 'Çocuklu', [cols.tag]: 'İş Arkadaşları' },
         ];
         const ws = XLSX.utils.json_to_sheet(sampleData);
         const wb = XLSX.utils.book_new();

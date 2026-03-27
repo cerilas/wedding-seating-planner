@@ -7,9 +7,11 @@ import ToastContainer from './components/ToastContainer';
 import HowToModal from './components/HowToModal';
 import useStore from './store';
 import useUiStore from './uiStore';
+import { LocaleProvider, useLocale } from './i18n';
 import { CircleHelp, Download, Trash2 } from 'lucide-react';
 
-function App() {
+function AppContent({ onToggleLocale }) {
+  const { t } = useLocale();
   const themeOptions = [
     {
       name: 'Kırmızı',
@@ -70,7 +72,7 @@ function App() {
   const handleThemeChange = (themeName) => {
     setCurrentTheme(themeName);
     applyTheme(themeName);
-    pushToast({ message: `${themeName} tema seçildi.`, type: 'info' });
+    pushToast({ message: t('themeSelected', { theme: themeName }), type: 'info' });
   };
 
   useEffect(() => {
@@ -79,14 +81,14 @@ function App() {
 
   const handleClearAll = () => {
     openConfirm({
-      title: 'Tüm veriler silinsin mi?',
-      message: 'Bu işlem geri alınamaz. Tüm davetliler, masalar ve sabit şekiller silinecek.',
-      confirmText: 'Evet, temizle',
-      cancelText: 'Vazgeç',
+      title: t('clearConfirmTitle'),
+      message: t('clearConfirmMessage'),
+      confirmText: t('confirmYesDelete'),
+      cancelText: t('cancel'),
       variant: 'danger',
       onConfirm: () => {
         clearAll();
-        pushToast({ message: 'Tüm veriler temizlendi.', type: 'success' });
+        pushToast({ message: t('clearedAll'), type: 'success' });
       },
     });
   };
@@ -96,11 +98,11 @@ function App() {
       <header className="app-header">
         <div className="header-left">
           <img src="/logo.png" alt="BilgeArif Organizasyon Logo" className="app-logo" />
-          <h1>Kroki ve Oturma Planı Oluşturucu</h1>
+          <h1>{t('appTitle')}</h1>
         </div>
         <div className="header-right">
           <span className="header-stats">
-            {guests.length} davetli • {tables.length} masa
+            {t('stats', { guests: guests.length, tables: tables.length })}
           </span>
 
           <div className="theme-picker" title="Tema seç">
@@ -122,21 +124,24 @@ function App() {
             className="btn btn-secondary"
             onClick={() => setShowHowTo(true)}
           >
-            <CircleHelp size={16} /> Nasıl Kullanılır
+            <CircleHelp size={16} /> {t('howTo')}
           </button>
           <button
             className="btn btn-accent"
             onClick={exportToExcel}
             disabled={guests.length === 0}
           >
-            <Download size={16} /> Excel&apos;e Aktar
+            <Download size={16} /> {t('exportExcel')}
           </button>
           <button
             className="btn btn-danger"
             onClick={handleClearAll}
             disabled={guests.length === 0 && tables.length === 0}
           >
-            <Trash2 size={16} /> Temizle
+            <Trash2 size={16} /> {t('clear')}
+          </button>
+          <button className="btn btn-secondary" onClick={onToggleLocale}>
+            {t('localeSwitch')}
           </button>
         </div>
       </header>
@@ -164,4 +169,12 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  const [locale, setLocale] = useState('tr');
+
+  return (
+    <LocaleProvider locale={locale}>
+      <AppContent onToggleLocale={() => setLocale((prev) => (prev === 'tr' ? 'en' : 'tr'))} />
+    </LocaleProvider>
+  );
+}

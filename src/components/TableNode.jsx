@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
 import useStore from '../store';
 import useUiStore from '../uiStore';
+import { useLocale } from '../i18n';
 
 export default function TableNode({ table, isSelected, onDragStart, zoom }) {
     const { guests, assignGuestToTable, selectTable, removeTable } = useStore();
     const { openConfirm, pushToast } = useUiStore();
+    const { t } = useLocale();
 
     const tableGuests = guests.filter((g) => g.tableId === table.id);
     const totalPeople = tableGuests.reduce((sum, g) => sum + (g.guestCount || 1), 0);
@@ -52,17 +54,20 @@ export default function TableNode({ table, isSelected, onDragStart, zoom }) {
     const handleContextMenu = (e) => {
         e.preventDefault();
         openConfirm({
-            title: 'Masa silinsin mi?',
-            message: `${table.label} ve bu masadaki atamalar kaldırılacak.`,
-            confirmText: 'Evet, sil',
-            cancelText: 'Vazgeç',
+            title: t('tableDeleteTitle'),
+            message: t('tableDeleteMessage', { table: table.label }),
+            confirmText: t('confirmYesDelete'),
+            cancelText: t('cancel'),
             variant: 'danger',
             onConfirm: () => {
                 removeTable(table.id);
-                pushToast({ message: `${table.label} silindi.`, type: 'info' });
+                pushToast({ message: t('tableDeleted', { table: table.label }), type: 'info' });
             },
         });
     };
+
+    const displayLabel = table.autoLabel !== false ? t('tableLabel', { number: table.number }) : table.label;
+    const rotation = table.rotation || 0;
 
     return (
         <div
@@ -78,7 +83,7 @@ export default function TableNode({ table, isSelected, onDragStart, zoom }) {
             onDragLeave={handleDragLeave}
             onContextMenu={handleContextMenu}
         >
-            <div className="table-visual">
+            <div className="table-visual" style={{ transform: `rotate(${rotation}deg)` }}>
                 <div className={`table-circle table-shape-${table.shape || 'circle'}`}>
                     <span className="table-number">{table.number}</span>
                 </div>
@@ -95,15 +100,15 @@ export default function TableNode({ table, isSelected, onDragStart, zoom }) {
                                 style={{
                                     transform: `translate(${x}px, ${y}px)`,
                                 }}
-                                title={`${g.name} (${g.guestCount} kişi)`}
+                                title={`${g.name} (${t('guestCountLabel', { count: g.guestCount })})`}
                             />
                         );
                     })}
                 </div>
             </div>
-            <div className="table-label">{table.label}</div>
+            <div className="table-label">{displayLabel}</div>
             {totalPeople > 0 && (
-                <div className="table-people-count">{totalPeople} kişi</div>
+                <div className="table-people-count">{t('guestCountLabel', { count: totalPeople })}</div>
             )}
         </div>
     );

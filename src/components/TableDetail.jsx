@@ -1,11 +1,13 @@
 import useStore from '../store';
 import useUiStore from '../uiStore';
+import { useLocale } from '../i18n';
 import { X, Edit3, Trash2, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 
 export default function TableDetail() {
     const { selectedTableId, tables, guests, updateTable, removeTable, unassignGuest, selectTable } = useStore();
     const { openConfirm, pushToast } = useUiStore();
+    const { t } = useLocale();
     const [isEditingLabel, setIsEditingLabel] = useState(false);
     const [labelValue, setLabelValue] = useState('');
 
@@ -14,7 +16,7 @@ export default function TableDetail() {
             <div className="table-detail-panel empty-detail">
                 <div className="empty-detail-content">
                     <p>🪑</p>
-                    <p>Detayları görmek için bir masa seçin</p>
+                    <p>{t('tableDetailTitle')}</p>
                 </div>
             </div>
         );
@@ -23,8 +25,17 @@ export default function TableDetail() {
     const table = tables.find((t) => t.id === selectedTableId);
     if (!table) return null;
 
+    const displayTableLabel = table.autoLabel ? t('tableLabel', { number: table.number }) : table.label;
+
     const tableGuests = guests.filter((g) => g.tableId === selectedTableId);
     const totalPeople = tableGuests.reduce((sum, g) => sum + (g.guestCount || 1), 0);
+    const rotation = table.rotation || 0;
+    const rotationEnabled = table.shape === 'rectangle' || table.shape === 'oval';
+
+    const rotateTable = (delta) => {
+        const next = (rotation + delta + 360) % 360;
+        updateTable(table.id, { rotation: next });
+    };
 
     const handleStartEdit = () => {
         setLabelValue(table.label);
@@ -33,7 +44,7 @@ export default function TableDetail() {
 
     const handleSaveLabel = () => {
         if (labelValue.trim()) {
-            updateTable(table.id, { label: labelValue.trim() });
+            updateTable(table.id, { label: labelValue.trim(), autoLabel: false });
         }
         setIsEditingLabel(false);
     };
@@ -45,15 +56,15 @@ export default function TableDetail() {
 
     const handleDeleteTable = () => {
         openConfirm({
-            title: 'Masa silinsin mi?',
-            message: `${table.label} ve bu masadaki tüm atamalar kaldırılacak.`,
-            confirmText: 'Evet, sil',
-            cancelText: 'Vazgeç',
+            title: t('tableDeleteTitle'),
+            message: t('tableDeleteMessage', { table: table.label }),
+            confirmText: t('confirmYesDelete'),
+            cancelText: t('cancel'),
             variant: 'danger',
             onConfirm: () => {
                 removeTable(table.id);
                 selectTable(null);
-                pushToast({ message: `${table.label} silindi.`, type: 'info' });
+                pushToast({ message: t('tableDeleted', { table: table.label }), type: 'info' });
             },
         });
     };
@@ -84,7 +95,7 @@ export default function TableDetail() {
                         autoFocus
                     />
                 ) : (
-                    <h2 onClick={handleStartEdit}>{table.label} <Edit3 size={14} className="edit-hint" /></h2>
+                    <h2 onClick={handleStartEdit}>{displayTableLabel} <Edit3 size={14} className="edit-hint" /></h2>
                 )}
                 <div className="detail-actions">
                     <button className="btn-icon danger" onClick={handleDeleteTable} title="Masayı Sil">
@@ -98,21 +109,46 @@ export default function TableDetail() {
 
             <div className="detail-stats">
                 <div className="stat">
-                    <span className="stat-label">Masa No</span>
+                    <span className="stat-label">{t('tableNo')}</span>
                     <span className="stat-value">{table.number}</span>
                 </div>
                 <div className="stat">
-                    <span className="stat-label">Davetli</span>
+                    <span className="stat-label">{t('tableGuests')}</span>
                     <span className="stat-value">{tableGuests.length}</span>
                 </div>
                 <div className="stat">
-                    <span className="stat-label">Toplam Kişi</span>
+                    <span className="stat-label">{t('totalPeople')}</span>
                     <span className="stat-value">{totalPeople}</span>
+                </div>
+                <div className="stat">
+                    <span className="stat-label">{t('orientation')}</span>
+                    <span className="stat-value">{rotation}°</span>
                 </div>
             </div>
 
+            <div className="shape-rotation-section">
+                <h3 className="detail-section-title">{t('orientation')}</h3>
+                <div className="rotation-controls">
+                    <button
+                        className="btn"
+                        onClick={() => rotateTable(-90)}
+                        disabled={!rotationEnabled}
+                    >
+                        {t('rotateLeft')}
+                    </button>
+                    <button
+                        className="btn"
+                        onClick={() => rotateTable(90)}
+                        disabled={!rotationEnabled}
+                    >
+                        {t('rotateRight')}
+                    </button>
+                </div>
+                {!rotationEnabled && <small>{t('rotationLimitHint')}</small>}
+            </div>
+
             <div className="shape-selector-section">
-                <h3 className="detail-section-title">Masa Şekli</h3>
+                <h3 className="detail-section-title">{t('tableShape')}</h3>
                 <div className="shape-selector">
                     <button
                         className={`shape-btn ${table.shape === 'circle' || !table.shape ? 'active' : ''}`}
@@ -149,12 +185,12 @@ export default function TableDetail() {
                 </div>
             </div>
 
-            <h3 className="detail-section-title">Oturanlar</h3>
+            <h3 className="detail-section-title">{t('seatedLabel')}</h3>
 
             {tableGuests.length === 0 ? (
                 <div className="empty-guests-hint">
-                    <p>Bu masada henüz kimse yok.</p>
-                    <p>Sol panelden bir davetliyi sürükleyip bırakın.</p>
+                    <p>{t('noPeople')}</p>
+                    <p>{t('dragHint')}</p>
                 </div>
             ) : (
                 <div className="detail-guest-list">
@@ -162,7 +198,7 @@ export default function TableDetail() {
                         <div key={guest.id} className="detail-guest-card">
                             <div className="detail-guest-info">
                                 <span className="detail-guest-name">{guest.name}</span>
-                                <span className="detail-guest-count">{guest.guestCount} kişi</span>
+                                <span className="detail-guest-count">{t('guestCountLabel', { count: guest.guestCount })}</span>
                                 {guest.tag && <span className="detail-guest-tag">{guest.tag}</span>}
                                 {guest.phone && <span className="detail-guest-phone">{guest.phone}</span>}
                                 {guest.note && <span className="detail-guest-note">{guest.note}</span>}
