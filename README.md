@@ -38,7 +38,7 @@ Kağıt üzerinde masa planı hazırlamak yerine, bu uygulama ile misafirleri h�
 
 ## Powered by Cerilas
 
-[![Cerilas](https://www.cerilas.com/wp-content/uploads/2024/06/cerilas-logo.png)](https://www.cerilas.com)
+[![Cerilas](src/assets/cerilas-logo.png)](https://www.cerilas.com)
 
 Bu proje, Cerilas tarafından geliştirildi. Detaylar için: [https://www.cerilas.com](https://www.cerilas.com)
 
