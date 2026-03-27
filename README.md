@@ -36,6 +36,12 @@ Bu uygulama özellikle şu kullanım senaryoları için uygundur:
 
 Kağıt üzerinde masa planı hazırlamak yerine, bu uygulama ile misafirleri hızla yerleştirip salon akışını daha profesyonel şekilde yönetebilirsiniz.
 
+## Powered by Cerilas
+
+[![Cerilas](https://www.cerilas.com/wp-content/uploads/2024/06/cerilas-logo.png)](https://www.cerilas.com)
+
+Bu proje, Cerilas tarafından geliştirildi. Detaylar için: [https://www.cerilas.com](https://www.cerilas.com)
+
 ## Ekranda Neler Yapabilirsiniz?
 
 ### Misafir Yönetimi
