@@ -42,6 +42,10 @@ Kağıt üzerinde masa planı hazırlamak yerine, bu uygulama ile misafirleri h�
 
 Bu proje, Cerilas tarafından geliştirildi. Detaylar için: [https://www.cerilas.com](https://www.cerilas.com)
 
+## Uygulama Demo Ekran Görüntüsü
+
+![Proje Ekran Görüntüsü](src/assets/project-screenshot.png)
+
 ## Ekranda Neler Yapabilirsiniz?
 
 ### Misafir Yönetimi
